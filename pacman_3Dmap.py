@@ -1,5 +1,6 @@
 import pygame
 import math
+import time
  
 #Configuration 
 SCREEN_RES = (1600, 800)
@@ -10,6 +11,9 @@ CASTED_RAYS = 120  # Number of vertical lines
 STEP_ANGLE = FOV / CASTED_RAYS
 MAX_DEPTH = 800
  
+orbs = []
+
+
  
 #1 is wall, 0 is space
 MAP = [
@@ -36,6 +40,52 @@ MAP = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
+
+def get_orb_animation(orb_index):
+    t = pygame.time.get_ticks() / 1000.0  # seconds since start
+    phase = orb_index * 0.3  # stagger so orbs don't all pulse in lockstep
+    bob_offset = math.sin(t * 2 + phase) * 4      # vertical float, +/- 4px
+    pulse_scale = 1.0 + math.sin(t * 4 + phase) * 0.15  # size breathing
+    return bob_offset, pulse_scale
+
+for row in range(len(MAP)):
+    for col in range(len(MAP[0])):
+        if MAP[row][col] == 0:  # only place on open floor
+            orb_x = (col + 0.5) * TILE_SIZE
+            orb_y = (row + 0.5) * TILE_SIZE
+            orbs.append({'x': orb_x, 'y': orb_y, 'active': True})
+            
+def render_orbs():
+    for i, orb in enumerate(orbs):
+        if not orb['active']:
+            continue
+
+        dx = orb['x'] - player_x
+        dy = orb['y'] - player_y
+        dist = math.hypot(dx, dy)
+
+        angle_to_orb = math.atan2(dy, dx) - player_angle
+        # normalize angle to [-pi, pi]
+        angle_to_orb = (angle_to_orb + math.pi) % (2 * math.pi) - math.pi
+
+        if abs(angle_to_orb) < HALF_FOV and dist > 1:
+            ray_index = int((angle_to_orb + HALF_FOV) / STEP_ANGLE)
+            if 0 <= ray_index < CASTED_RAYS:
+                corrected_dist = dist * math.cos(angle_to_orb)
+                screen_x = ray_index * (SCREEN_RES[0] / CASTED_RAYS)
+
+                bob_offset, pulse_scale = get_orb_animation(i)
+                base_size = 21000 / (corrected_dist + 0.0001) * 0.15
+                size = base_size * pulse_scale
+
+                screen_y = SCREEN_RES[1] / 2 + bob_offset
+
+                pygame.draw.circle(
+                    screen,
+                    (255, 220, 100),
+                    (int(screen_x), int(screen_y)),
+                    max(1, int(size / 2))
+                )
  
 # Open the border on the tunnel row so the player can walk out either side
 MAP[10][0] = 0
@@ -119,7 +169,8 @@ def cast_rays():
                 ))
                 break
         start_angle += STEP_ANGLE
- 
+
+#render_orbs()
  
 #Main Loop
 running = True
@@ -151,13 +202,14 @@ while running:
     if not is_wall(player_x, new_y):
         player_y = new_y
  
-    # tunnel teleport check (after movement is resolved)
+    # tunnel teleport check (after movement resolved)
     player_x, player_y = try_wrap(player_x, player_y)
  
     # Rendering
     screen.fill((50, 50, 50))  # Ceiling
     pygame.draw.rect(screen, (20, 20, 20), (0, SCREEN_RES[1]/2, SCREEN_RES[0], SCREEN_RES[1]/2))  # Floor
     cast_rays()
+    render_orbs()
  
     pygame.display.flip()
     clock.tick(60)
