@@ -12,7 +12,7 @@ STEP_ANGLE = FOV / CASTED_RAYS
 MAX_DEPTH = 800
  
 orbs = []
-
+depth_buffer = [MAX_DEPTH] * CASTED_RAYS
 
  
 #1 is wall, 0 is space
@@ -65,27 +65,32 @@ def render_orbs():
         dist = math.hypot(dx, dy)
 
         angle_to_orb = math.atan2(dy, dx) - player_angle
-        # normalize angle to [-pi, pi]
         angle_to_orb = (angle_to_orb + math.pi) % (2 * math.pi) - math.pi
 
         if abs(angle_to_orb) < HALF_FOV and dist > 1:
             ray_index = int((angle_to_orb + HALF_FOV) / STEP_ANGLE)
             if 0 <= ray_index < CASTED_RAYS:
                 corrected_dist = dist * math.cos(angle_to_orb)
-                screen_x = ray_index * (SCREEN_RES[0] / CASTED_RAYS)
 
+                if corrected_dist >= depth_buffer[ray_index]:
+                    continue
+
+                screen_x = ray_index * (SCREEN_RES[0] / CASTED_RAYS)
                 bob_offset, pulse_scale = get_orb_animation(i)
                 base_size = 21000 / (corrected_dist + 0.0001) * 0.15
                 size = base_size * pulse_scale
-
                 screen_y = SCREEN_RES[1] / 2 + bob_offset
+                half = size / 2
 
-                pygame.draw.circle(
-                    screen,
-                    (255, 220, 100),
-                    (int(screen_x), int(screen_y)),
-                    max(1, int(size / 2))
-                )
+                pygame.draw.circle(screen, (255, 220, 100),
+                                    (int(screen_x), int(screen_y)), max(1, int(half)))
+
+                # small glint highlight, offset toward upper-left of the orb
+                glint_x = screen_x - half * 0.15
+                glint_y = screen_y - half * 0.35
+                glint_r = max(1, size * 0.08)
+                pygame.draw.circle(screen, (255, 255, 220),
+                                    (int(glint_x), int(glint_y)), int(glint_r))
  
 # Open the border on the tunnel row so the player can walk out either side
 MAP[10][0] = 0
@@ -216,6 +221,8 @@ while running:
     # Rendering
     screen.fill((50, 50, 50))  # Ceiling
     pygame.draw.rect(screen, (20, 20, 20), (0, SCREEN_RES[1]/2, SCREEN_RES[0], SCREEN_RES[1]/2))  # Floor
+    
+    #call functions
     cast_rays()
     render_orbs()
     check_orb_collection()
