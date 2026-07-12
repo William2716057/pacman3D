@@ -171,6 +171,14 @@ def cast_rays():
         start_angle += STEP_ANGLE
 
 #render_orbs()
+
+def check_orb_collection():
+    p_col, p_row = int(player_x / TILE_SIZE), int(player_y / TILE_SIZE)
+    for orb in orbs:
+        if orb['active']:
+            o_col, o_row = int(orb['x'] / TILE_SIZE), int(orb['y'] / TILE_SIZE)
+            if (o_col, o_row) == (p_col, p_row):
+                orb['active'] = False
  
 #Main Loop
 running = True
@@ -210,6 +218,7 @@ while running:
     pygame.draw.rect(screen, (20, 20, 20), (0, SCREEN_RES[1]/2, SCREEN_RES[0], SCREEN_RES[1]/2))  # Floor
     cast_rays()
     render_orbs()
+    check_orb_collection()
  
     pygame.display.flip()
     clock.tick(60)
