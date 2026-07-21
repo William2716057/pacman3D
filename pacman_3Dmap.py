@@ -54,12 +54,15 @@ def get_orb_animation(orb_index):
     pulse_scale = 1.0 + math.sin(t * 4 + phase) * 0.15  # size breathing
     return bob_offset, pulse_scale
 
+BIG_ORB_POSITIONS = {(16, 1)}
+
 for row in range(len(MAP)):
     for col in range(len(MAP[0])):
         if MAP[row][col] == 0:  # only place on open floor
             orb_x = (col + 0.5) * TILE_SIZE
             orb_y = (row + 0.5) * TILE_SIZE
-            orbs.append({'x': orb_x, 'y': orb_y, 'active': True})
+            is_big = (row, col) in BIG_ORB_POSITIONS
+            orbs.append({'x': orb_x, 'y': orb_y, 'active': True, 'big': is_big})
             
 def render_orbs():
     for i, orb in enumerate(orbs):
@@ -83,13 +86,18 @@ def render_orbs():
 
                 screen_x = ray_index * (SCREEN_RES[0] / CASTED_RAYS)
                 bob_offset, pulse_scale = get_orb_animation(i)
-                base_size = 21000 / (corrected_dist + 0.0001) * 0.15
+                #if MAP = [?][?] base_size = 31000
+                #else
+                size_multiplier = 1.2 if orb['big'] else 0.15
+                base_size = 21000 / (corrected_dist + 0.0001) * size_multiplier #fixed
+                
                 size = base_size * pulse_scale
                 screen_y = SCREEN_RES[1] / 2 + bob_offset
                 half = size / 2
 
-                pygame.draw.circle(screen, (255, 220, 100),
-                                    (int(screen_x), int(screen_y)), max(1, int(half)))
+                color = (255, 100, 100) if orb['big'] else (255, 220, 100)
+                pygame.draw.circle(screen, color,
+                    (int(screen_x), int(screen_y)), max(1, int(half)))
 
                 # small glint highlight, offset toward upper-left of the orb
                 glint_x = screen_x - half * 0.15
