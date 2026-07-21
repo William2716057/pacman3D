@@ -105,7 +105,9 @@ screen = pygame.display.set_mode(SCREEN_RES)
 clock = pygame.time.Clock()
 pygame.mixer.init()
 
+#play sound on start
 launch_sound = pygame.mixer.Sound("launch_sound.wav")
+chomp_sound = pygame.mixer.Sound("chomp.wav") #may need to find better sample
 launch_sound.play()
  
 #Position
@@ -191,6 +193,7 @@ def check_orb_collection():
         if orb['active']:
             o_col, o_row = int(orb['x'] / TILE_SIZE), int(orb['y'] / TILE_SIZE)
             if (o_col, o_row) == (p_col, p_row):
+                chomp_sound.play()
                 orb['active'] = False
  
 #Main Loop
