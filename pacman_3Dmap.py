@@ -1,7 +1,8 @@
 import pygame
 import math
 import time
- 
+
+
 #Configuration 
 SCREEN_RES = (1600, 800)
 TILE_SIZE = 25
@@ -102,12 +103,16 @@ TUNNEL_ROWS = [10]
 pygame.init()
 screen = pygame.display.set_mode(SCREEN_RES)
 clock = pygame.time.Clock()
+pygame.mixer.init()
+
+launch_sound = pygame.mixer.Sound("launch_sound.wav")
+launch_sound.play()
  
 #Position
 player_x = (len(MAP[0]) / 2) * TILE_SIZE
 player_y = (len(MAP) / 2) * TILE_SIZE
 player_angle = math.pi
- 
+
  
 def is_wall(x, y):
     col = int(x / TILE_SIZE)
