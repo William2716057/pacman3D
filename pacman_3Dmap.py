@@ -140,6 +140,7 @@ def cast_rays():
     max_col = len(MAP[0])
  
     for ray in range(CASTED_RAYS):
+        depth_buffer[ray] = MAX_DEPTH #to hide orbs behind walls
         for depth in range(1, MAX_DEPTH):
             target_x = player_x + math.cos(start_angle) * depth
             target_y = player_y + math.sin(start_angle) * depth
@@ -159,7 +160,9 @@ def cast_rays():
  
             if MAP[row][col] == 1:
                 # Fix Fisheye effect
-                depth *= math.cos(player_angle - start_angle)
+                #depth *= math.cos(player_angle - start_angle)
+                corrected_depth = depth * math.cos(player_angle - start_angle)
+                depth_buffer[ray] = corrected_depth
  
                 # Calculate wall height
                 wall_height = 21000 / (depth + 0.0001)
