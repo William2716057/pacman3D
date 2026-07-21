@@ -14,7 +14,8 @@ MAX_DEPTH = 800
  
 orbs = []
 depth_buffer = [MAX_DEPTH] * CASTED_RAYS
-
+score = 0
+#font = pygame.font.SysFont(None, 36)
  
 #1 is wall, 0 is space
 MAP = [
@@ -41,6 +42,10 @@ MAP = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ]
+
+def draw_text():
+    score_text = font.render(f"SCORE: {score:02d}", True, (255, 255, 255))
+    screen.blit(score_text, (10, 10))
 
 def get_orb_animation(orb_index):
     t = pygame.time.get_ticks() / 1000.0  # seconds since start
@@ -104,6 +109,7 @@ pygame.init()
 screen = pygame.display.set_mode(SCREEN_RES)
 clock = pygame.time.Clock()
 pygame.mixer.init()
+font = pygame.font.SysFont(None, 36)
 
 #play sound on start
 launch_sound = pygame.mixer.Sound("launch_sound.wav")
@@ -186,14 +192,16 @@ def cast_rays():
         start_angle += STEP_ANGLE
 
 #render_orbs()
-
+#score = []
 def check_orb_collection():
+    global score
     p_col, p_row = int(player_x / TILE_SIZE), int(player_y / TILE_SIZE)
     for orb in orbs:
         if orb['active']:
             o_col, o_row = int(orb['x'] / TILE_SIZE), int(orb['y'] / TILE_SIZE)
             if (o_col, o_row) == (p_col, p_row):
                 chomp_sound.play()
+                score += 10;
                 orb['active'] = False
  
 #Main Loop
@@ -237,6 +245,7 @@ while running:
     cast_rays()
     render_orbs()
     check_orb_collection()
+    draw_text()
  
     pygame.display.flip()
     clock.tick(60)
